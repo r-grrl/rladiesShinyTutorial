@@ -1,0 +1,399 @@
+---
+title: "Shiny 101"
+output: ioslides_presentation
+runtime: shiny
+widescreen: true
+---
+
+```{r setup, include= FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(ggplot2)
+chickwts <- chickwts
+```
+
+## Welcome to Shiny
+
+Shiny is an R package that makes it easy to build interactive web applications (apps) straight from R. This lesson will get you started building Shiny apps right away.
+
+If you still haven't installed the Shiny package, open an R session, connect to the internet, and run:
+```{r echo = TRUE, eval=FALSE}
+install.packages("shiny")
+```
+
+## Example of Shiny
+```{r echo = TRUE}
+textInput(inputId = "calc", label = "R Code", value= "", width = 200)
+
+renderPrint(eval(parse(text =input$calc)))
+
+```
+
+## Structure of a Shiny App
+Shiny apps have two components:
+
+- a user-interface script
+
+- a server script
+
+## ui.R {.smaller}
+
+```{r echo = TRUE, eval=FALSE}
+# Define UI for application that draws a histogram
+shinyUI(fluidPage(
+
+  # Application title
+  titlePanel("Hello Shiny!"),
+
+  # Sidebar with a slider input for the number of bins
+  sidebarLayout(
+    sidebarPanel(
+      sliderInput("bins",
+                  "Number of bins:",
+                  min = 1,
+                  max = 50,
+                  value = 30)
+    ),
+
+    # Show a plot of the generated distribution
+    mainPanel(
+      plotOutput("distPlot")
+    )
+  )
+))
+```
+
+## server.R {.smaller}
+
+```{r echo = TRUE, eval=FALSE}
+# Define server logic required to draw a histogram
+shinyServer(function(input, output) {
+
+  # Expression that generates a histogram. The expression is
+  # wrapped in a call to renderPlot to indicate that:
+  #
+  #  1) It is "reactive" and therefore should re-execute automatically
+  #     when inputs change
+  #  2) Its output type is a plot
+
+  output$distPlot <- renderPlot({
+    x    <- faithful[, 2]  # Old Faithful Geyser data
+    bins <- seq(min(x), max(x), length.out = input$bins + 1)
+
+    # draw the histogram with the specified number of bins
+    hist(x, breaks = bins, col = 'darkgray', border = 'white')
+  })
+})
+```
+
+##Hello Shiny App
+At one level, the Hello Shiny server.R script is very simple. The script does some calculations and then plots a histogram with the requested number of bins.
+
+However, you’ll also notice that most of the script is wrapped in a call to renderPlot. The comment above the function explains a bit about this, but if you find it confusing, don't worry. We’ll cover this concept in much more detail soon.
+
+Play with the **Hello Shiny** app and review the source code. Try to develop a feel for how the app works.
+
+Your R session will be busy while the **Hello Shiny** app is active, so you will not be able to run any R commands. R is monitoring the app and executing the app's reactions. To get your R session back, hit escape or click the stop sign icon (found in the upper right corner of the RStudio console panel).
+
+##Running an App
+Every Shiny app has the same structure: two R scripts saved together in a directory. At a minimum, a Shiny app has `ui.R` and `server.R` files.
+
+Note: As of version 0.10.2, Shiny supports single-file applications. You no longer need to build separate `server.R` and `ui.R` files for your app; you can just create a file called `app.R` that contains both the server and UI components. You can learn more about building a Shiny app in a single file here, however this tutorial will focus on the two file structure for building a Shiny app.
+
+You can create a Shiny app by making a new directory and saving a `ui.R` and `server.R` file inside it. Each app will need its own unique directory.
+
+----
+<div class="columns-2">
+
+You can run a Shiny app by giving the name of its directory to the function `runApp`. For example if your Shiny app is in a directory called my_app, run it with the following code:
+```{r echo = TRUE, eval=FALSE}
+> library(shiny)
+> runApp("my_app")
+```
+Note: `runApp` is similar to `read.csv`, `read.table`, and many other functions in R. The first argument of runApp is the filepath from your working directory to the app's directory. The code above assumes that the app directory is in your working directory. In this case, the filepath is just the name of the directory.
+
+(In case you are wondering, the **Hello Shiny** app's files are saved in a special system directory called `"01_hello"`. This directory is designed to work with the `runExample ("01_hello")` call.)
+
+##Exercise
+Create a new directory named ChickenApp in your working directory. Then copy and paste the ui.R and server.R scripts above into your directory to use as reference (the scripts from Hello Shiny). When you are finished the directory should look like this:
+[show folder]
+
+## Building a user interface - Basics
+
+At its most basic, a UI.R script looks like this:
+
+```{r echo = TRUE, eval=FALSE}
+shinyUI(fluidPage(
+  
+))
+```
+
+The use of fluidPage creates a display that automatically adjusts to the dimensions the user's browser window. You lay out your app by placing elements in the fluidPage function - eg:
+
+```{r echo = TRUE, eval=FALSE}
+shinyUI(fluidPage(
+  #layout options here
+  #and here
+  #etc
+))
+```
+
+## Layout
+
+There are many different UI layouts possible through Shiny but the most simple (and most common) involves the use of:
+
+- a titlePanel, and 
+- a sidebarLayout
+
+For example...
+
+## Code to create titlePanel & sidebarLayout
+
+```{r echo = TRUE, eval=FALSE}
+shinyUI(fluidPage(
+  
+  titlePanel("title panel"),
+
+  sidebarLayout(
+    sidebarPanel( "sidebar panel"),
+    mainPanel("main panel")
+  )
+  
+))
+```
+
+## Adding text & images to UI - Example
+There is a shiny cheatsheet on R Studio's website here:(https://github.com/rstudio/cheatsheets/raw/master/shiny.pdf)
+It lists some of the common HTML tags you can use to format content in your UI. You can add an image to your app by placing the image file in a folder called www in your app folder.
+```{r echo = TRUE, eval=FALSE}
+shinyUI(fluidPage(
+  
+  titlePanel("title panel"),
+
+  sidebarLayout(
+    h1("This is my header"),
+    br(),
+    p(strong("bold")),
+    sidebarPanel( "sidebar panel"),
+    mainPanel("main panel")
+  )
+  
+))
+```
+
+## Adding text & images to UI - Practical
+Add a chicken based image to your app, and add an appropriate title and some text.
+
+##Widgets
+The next few sections will show you how to add widgets to your Shiny apps. What's a widget? It is a web element that your users can interact with. Widgets provide a way for your users to send messages to the Shiny app, or to access outputs from your server.
+
+Shiny input widgets collect a value from your user. When a user changes the widget, the value will change as well. 
+
+##Input Control widgets
+[link] (https://shiny.rstudio.com/gallery/widget-gallery.html)
+
+##Adding Widgets
+To add a input widget to your app, place a widget function in sidebarPanel or mainPanel in your ui.R file.
+
+Each widget function requires several arguments. The first two arguments for each widget are:
+
+- A Name for the widget. The user will not see this name, but you can use it to access the widget's value. The name should be a character string.
+
+- A label. This label will appear with the widget in your app. It should be a character string, but it can be an empty string "".
+
+In this example, the name is 'action1' and the label is 'Action': actionButton("action1", label = "Action")
+
+##
+The remaining arguments vary from widget to widget, depending on what the widget needs to do its job. They include things the widget needs to do its job, like initial values, ranges, and increments. You can find the exact arguments needed by a widget on the widget function's help page, (e.g., ?selectInput).
+
+Play with each widget to get a feel for what it does. Experiment with changing the values of the widget functions and observe the effects. If you are interested in the layout scheme for this Shiny app, read the description in the application layout guide. This lesson will not cover this slightly more complicated layout scheme, but it is interesting to note what it does.
+
+##Exercise
+Add a input widget with a name of "feed" to your ui.R script, with the following options: list("casein", "horsebean", "linseed", "meatmeal", "soybean", "sunflower"), and run the app to see what it looks like **You might want to limit the number of selections to one**.
+
+## Display reactive output
+
+Ultimately, Shiny is all about reactive content....a user interacts with the UI and the output reacts/changes.
+
+Creating reactive output in your app is a 2-step process:
+
+1. You add an object (essentially a place-holder) to your user-interface (through UI.R)
+2. You tell Shiny how to populate the object (through server.R). 
+
+The output will be reactive if the code that builds it links to a widget.
+
+## Step 1 - Adding an object to your UI
+
+There are a variety of different objects/place-holders you can add - each specific to the type of output you want to display:
+
+| Output        | Used for           |
+| ------------- |:-------------:|
+| imageOutput      | image      |
+| plotOutput | plot      |
+| tableOutput | table |
+| textOutput | text |
+| uiOutput      | raw HTML |
+| dataTableOutput | table (DT style) |
+| leafletOutput | maps (leaflet style) |
+
+## Step 1 - Adding an object to your UI
+
+Example of where to add it to your UI.R code:
+
+```{r echo = TRUE, eval=FALSE}
+shinyUI(fluidPage(
+  
+  titlePanel("What's my name?"),
+
+  sidebarLayout(
+    sidebarPanel(textInput("name","Please enter your name")),
+    mainPanel(textOutput("text1"))
+  )
+  
+))
+```
+
+Each output/placeholder requires a name - eg. "text1" - so you can refer to it later within your server.R script
+
+## Step 2 - Telling Shiny how to populate your object
+
+It is straightforward to add code to your server.R script to render each output you have added to your UI.
+
+Eg:
+
+```{r echo = TRUE, eval=FALSE}
+shinyServer(function(input, output) {
+
+     output$text1 <- renderText({ 
+          "Your name is"
+     })
+  })
+```
+
+Note that the name of the output -  eg. "text1" - needs to match that used in the UI. Also, that the output needs to wrapped within a appropriate render function.
+
+## Step 2 - Render functions
+
+The type of render function used needs to match the type of output you have specified in the UI script.
+
+| Output        | Used for           | Render function |
+| ------------- |----------| ------------- |
+| imageOutput      | image      | renderImage |
+| plotOutput | plot      | renderPlot |
+| tableOutput | table | renderTable |
+| textOutput | text | renderText |
+| uiOutput      | raw HTML | renderUI |
+| dataTableOutput | table (DT style) | renderDataTable |
+| leafletOutput | maps (leaflet style) | renderLeaflet |
+
+## Linking data to widgets
+chickwts is a standard data set in R, it can be viewed simply by typing 'chickwts' into the console.
+
+We are going to build a simple interface to manipulate the chickwts dataset and plot the results.
+
+##Accessing Inputs from the UI
+You may remember we gave each of our widgets an inputId when we added them to our UI script.
+
+The user selections can be accessed in the server script using this code:
+
+```{r echo = TRUE, eval=FALSE}
+input$feed
+```
+
+Different inputs will output different types of information - e.g. a numericInput will give you an input of type numeric. This is important when you are using it to filter the data.
+
+## Display reactive output - Practical
+Create a text output that prints the sum of the selected category from 'input$feed' from chickwts to your UI. Create a plot output that shows the range of the selected category.
+
+
+## Controlling app reactivity
+
+Reactive applications built entirely using Shiny's Render functions are great but sometimes you might want more control over the way your app responds. Eg:
+
+- If you have multiple outputs (eg. plot and table) driven off the same data/inputs, your app might become quite slow as both react each time a change is made.
+
+- If you're asking a user for several parameters, you might not want your output changing until they've all been set.
+
+The solution is to use Shiny's reactive and eventReactive functions instead.
+
+## reactive function
+
+Useful for speeding up your app when essentially it's doing the same thing several times - once for each output.
+
+Eg - consider this inefficient extract from an early version of the NAO's back catalogue analyser (note this code will not work for you!):
+```{r, eval=FALSE}
+bca_data<-fread("data/bca-data.csv")
+
+shinyServer(function(input, output) {
+  
+  output$view <- renderDataTable({select(filter(bca_data,
+                 grepl(input$searchterm, paratext)),year,
+                 report,section,subheading,paratext)})
+
+  output$recordcount<-renderText({nrow(select(filter(bca_data,
+                 grepl(input$searchterm, paratext)),year,
+                 report,section,subheading,paratext))})
+
+  })
+```
+
+## reactive function
+
+A more efficient approach was to re-write the app using a reactive function like this. 
+```{r, eval=FALSE}
+bca_data<-fread("data/bca-data.csv")
+
+shinyServer(function(input, output) {
+  
+  bca-filtered<-reactive({select(filter(bca_data,
+                 grepl(input$searchterm, paratext)),year,
+                 report,section,subheading,paratext)})
+  
+  output$view <- renderDataTable({bca_filtered()})
+
+  output$recordcount<-renderText({nrow(bca-filtered())})
+
+  })
+```
+The filter code now only runs once when a new search term is entered.
+
+## Sharing your apps
+
+There are 2 main ways of sharing a Shiny app:
+
+**1 - Share your app as 2 files - ui.R and server.R**
+
+Can be emailed/saved locally and run as per normal:
+```{r echo = TRUE, eval=FALSE}
+runApp("<folder location where ui and server files saved>")
+```
+
+Or zipped/saved on weblink (eg. NAOTank) and run via:
+```{r echo= TRUE, eval=FALSE}
+runApp("<the weblink address for the zip file>")
+```
+However, both require user to have R (and right packages) pre-installed.
+
+## Sharing your apps
+
+**2 - Share your app as a web page**
+
+Easier for the end-user as can be accessed via URL & browser and no need for them to be running R themselves.
+
+2 main options available and NAO has access to both solutions:
+
+- [shinyapps.io] [id] - this is a cloud hosting site provided by RStudio, it's very easy to use and the NAO has a corporate account which can be used to publish applications externally
+
+- Shiny Server - this is a particular piece of server software, again provided by RStudio. NAO currently has a version of Shiny Server which can be used to share aplications internally.
+
+If you wish to share your apps via either of these routes, please talk to Ben, Rachel or Phil.
+
+[id]: https://www.shinyapps.io/
+
+## Further information
+
+* Great introductory guidance available on the RShiny tutorial at: https://shiny.rstudio.com/tutorial/
+
+* Much more comprehensive info available at: https://shiny.rstudio.com/articles/
+
+* Fun examples of shiny outputs (with code) available at https://shiny.rstudio.com/gallery/
+
